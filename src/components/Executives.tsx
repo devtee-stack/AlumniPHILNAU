@@ -6,7 +6,7 @@ const Executives = () => {
     {
       name: "Dr. Chidiebere Obi",
       position: "President",
-      image: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=600&q=80",
+      image: "/images/NAU3315.jpg",
       bio: "Leading the alumni network with vision and dedication",
     },
     {
@@ -18,11 +18,11 @@ const Executives = () => {
     {
       name: "Dr. Ogochukwu Okpokwasili",
       position: "Secretary General",
-      image: "https://images.unsplash.com/photo-1552058544-f2b08422138a?auto=format&fit=crop&w=600&q=80",
+      image: "/images/executive3.jpeg",
       bio: "Ensuring effective communication and organization",
     },
     {
-      name: "Onyeka Uzowulu",
+      name: "Dr. Onyeka Uzowulu",
       position: "Assistant Secretary",
       image: "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&w=600&q=80",
       bio: "Managing financial resources with transparency",
@@ -30,25 +30,25 @@ const Executives = () => {
     {
       name: "Dr. Kelechi Ezeani",
       position: "Financial Secretary",
-      image: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=600&q=80",
+      image: "/images/executive5.jpeg",
       bio: "Building strong community relationships",
     },
     {
       name: "Anthony Nwokoye",
       position: "Treasurer",
-      image: "https://images.unsplash.com/photo-1580489944761-15a19d654956?auto=format&fit=crop&w=600&q=80",
+      image: "/images/executive6.jpeg",
       bio: "Organizing impactful alumni gatherings and programs",
     },
     {
       name: "Dr. Kizito Okoli",
       position: "Director of Socials",
-      image: "https://images.unsplash.com/photo-1580489944761-15a19d654956?auto=format&fit=crop&w=600&q=80",
+      image: "/images/executive7.jpeg",
       bio: "Organizing impactful alumni gatherings and programs",
     },
     {
       name: "Francis Aleke",
       position: "Public Relations Officer",
-      image: "https://images.unsplash.com/photo-1580489944761-15a19d654956?auto=format&fit=crop&w=600&q=80",
+      image: "https://images.unsplash.com/-1580489944761-15a19d654956?auto=format&fit=crop&w=600&q=80",
       bio: "Managing public relations and communications",
     },
   ];
@@ -67,7 +67,7 @@ const Executives = () => {
       bio: "Ethics specialist and community advocate",
     },
     {
-      name: "Prof. Yusuf Mohammed",
+      name: "Prof. Austin",
       position: "Trustee",
       image: "https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?auto=format&fit=crop&w=600&q=80",
       bio: "Expert in philosophy of science and epistemology",
