@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Menu, X, GraduationCap, ChevronDown } from "lucide-react";
+import { Menu, X, ChevronDown } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import {
@@ -69,7 +69,11 @@ const Header = ({ openAuthModal }: HeaderProps) => {
             className="flex items-center gap-3 group"
           >
             <div className="bg-gold p-2 rounded-lg shadow-md group-hover:scale-110 transition-transform">
-              <GraduationCap className="h-6 w-6 md:h-8 md:w-8 text-gold-foreground" />
+              <img
+                src="/images/uniziklogo.png"
+                alt="UNIZIK Philosophy Alumni Association Logo"
+                className="h-6 w-6 md:h-8 md:w-8 object-contain"
+              />
             </div>
             <div className="hidden md:block">
               <h1 className="text-primary-foreground font-bold text-sm lg:text-base leading-tight">

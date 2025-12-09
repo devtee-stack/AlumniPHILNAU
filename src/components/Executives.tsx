@@ -10,9 +10,9 @@ const Executives = () => {
       bio: "Leading the alumni network with vision and dedication",
     },
     {
-      name: "Joy Amadi",
+      name: "Joy Egbujor",
       position: "Vice President",
-      image: "https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&w=600&q=80",
+      image: "/images/executive2.jpg",
       bio: "Fostering academic excellence and professional growth",
     },
     {
@@ -75,7 +75,7 @@ const Executives = () => {
     {
       name: "Christopher Ozoude",
       position: "Trustee",
-      image: "https://images.unsplash.com/photo-1594744803329-e58b31de8bf5?auto=format&fit=crop&w=600&q=80",
+      image: "/images/ozoude.jpg",
       bio: "Renowned scholar in contemporary African thought",
     },
     {
@@ -93,7 +93,7 @@ const Executives = () => {
     {
       name: "Joy Egbujor",
       position: "Trustee",
-      image: "https://images.unsplash.com/photo-1594744803329-e58b31de8bf5?auto=format&fit=crop&w=600&q=80",
+      image: "/images/executive2.jpg",
       bio: "Renowned scholar in contemporary African thought",
     },
   ];

@@ -29,7 +29,7 @@ const Contact = () => {
             <div className="space-y-3">
               <div className="flex items-center gap-3 text-muted-foreground">
                 <Mail className="h-5 w-5 text-accent" />
-                <span>alumni@unizik.edu.ng</span>
+                <span>alumni@unizikphilosophyalumi.com</span>
               </div>
               <div className="flex items-center gap-3 text-muted-foreground">
                 <Phone className="h-5 w-5 text-accent" />
