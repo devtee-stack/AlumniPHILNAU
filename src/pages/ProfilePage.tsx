@@ -8,6 +8,27 @@ import { Profile as ProfileType } from "@/hooks/useProfile";
 const ProfilePage = () => {
   const { userId } = useParams<{ userId: string }>();
   const { user } = useAuth();
+  const queryClient = useQueryClient();
+
+  const updateProfile = useMutation({
+    mutationFn: async (updates: Partial<ProfileType>) => {
+      if (!user || !userId) throw new Error('Not authenticated or no user ID');
+
+      const { error } = await supabase
+        .from('profiles')
+        .update(updates)
+        .eq('id', userId);
+
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['profile', userId] });
+      toast.success('Profile updated successfully');
+    },
+    onError: (error: any) => {
+      toast.error(error.message || 'Failed to update profile');
+    },
+  });
 
   const { data: profile, isLoading } = useQuery({
     queryKey: ['profile', userId],
@@ -33,7 +54,7 @@ const ProfilePage = () => {
       <Profile
         profile={profile || null}
         isLoading={isLoading}
-        onUpdate={() => {}} // This will be handled by the Profile component
+        onUpdate={updateProfile.mutate} // Handle profile updates
         isOwnProfile={isOwnProfile}
       />
     </div>

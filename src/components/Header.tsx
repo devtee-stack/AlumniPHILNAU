@@ -114,6 +114,9 @@ const Header = ({ openAuthModal }: HeaderProps) => {
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="bg-card">
+                  <DropdownMenuItem onClick={() => navigate(`/profile/${user.id}`)} className="cursor-pointer">
+                    Profile
+                  </DropdownMenuItem>
                   <DropdownMenuItem onClick={handleLogout} className="cursor-pointer">
                     Logout
                   </DropdownMenuItem>

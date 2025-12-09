@@ -47,15 +47,15 @@ const Executives = () => {
     },
     {
       name: "Francis Aleke",
-      position: "Public Relations Officer",
+      position: "Provost",
       image: "/images/executive8.jpg",
-      bio: "Managing public relations and communications",
+      bio: "Educator",
     },
     {
       name: "Cynthia Obiasogu",
-      position: "Provost",
-      image: "/images/executive8.jpg",
-      bio: "Managing public relations and communications",
+      position: "Public Relations Officer",
+      image: "/images/cynthia.jpg",
+      bio: "CEO, Cynoob Productions",
     },
   ];
 
