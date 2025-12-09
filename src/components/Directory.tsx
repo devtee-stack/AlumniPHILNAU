@@ -161,34 +161,34 @@ const Directory = () => {
         {/* Real dynamic list */}
         <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
           {filteredProfiles.map((person, index) => (
-            <Card
-              key={person.id}
-              className="p-4 hover:shadow-lg transition-all hover:-translate-y-1 animate-fade-in"
-              style={{ animationDelay: `${index * 100}ms` }}
-            >
-              <div className="flex gap-4">
-                <img
-                  src={
-                    person.avatar_url ||
-                    `https://ui-avatars.com/api/?name=${encodeURIComponent(person.full_name)}&background=FFD700&color=000`
-                  }
-                  alt={person.full_name}
-                  className="w-20 h-20 rounded-lg object-cover border-2 border-gold"
-                />
-                <div className="flex-1 min-w-0">
-                  <h4 className="font-bold text-primary truncate">{person.full_name}</h4>
-                  <p className="text-sm text-muted-foreground">
-                    {person.degree || "Philosophy Alumnus"}
-                    {person.graduation_year && `, ${person.graduation_year}`}
-                  </p>
-                  {person.profession && (
-                    <p className="text-sm text-muted-foreground truncate">{person.profession}</p>
-                  )}
-                  {person.location && (
-                    <p className="text-sm text-muted-foreground">{person.location}</p>
-                  )}
+            <Link key={person.id} to={`/profile/${person.id}`}>
+              <Card
+                className="p-4 hover:shadow-lg transition-all hover:-translate-y-1 animate-fade-in"
+                style={{ animationDelay: `${index * 100}ms` }}
+              >
+                <div className="flex gap-4">
+                  <img
+                    src={
+                      person.avatar_url ||
+                      `https://ui-avatars.com/api/?name=${encodeURIComponent(person.full_name)}&background=FFD700&color=000`
+                    }
+                    alt={person.full_name}
+                    className="w-20 h-20 rounded-lg object-cover border-2 border-gold"
+                  />
+                  <div className="flex-1 min-w-0">
+                    <h4 className="font-bold text-primary truncate">{person.full_name}</h4>
+                    <p className="text-sm text-muted-foreground">
+                      {person.degree || "Philosophy Alumnus"}
+                      {person.graduation_year && `, ${person.graduation_year}`}
+                    </p>
+                    {person.profession && (
+                      <p className="text-sm text-muted-foreground truncate">{person.profession}</p>
+                    )}
+                    {person.location && (
+                      <p className="text-sm text-muted-foreground">{person.location}</p>
+                    )}
+                  </div>
                 </div>
-              </div>
               </Card>
             </Link>
           ))}
