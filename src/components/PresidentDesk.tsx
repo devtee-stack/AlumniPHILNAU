@@ -9,7 +9,7 @@ const PresidentDesk = () => {
       <Card className="p-6 md:p-8 shadow-lg animate-fade-in">
         <div className="grid md:grid-cols-[280px_1fr] gap-6 md:gap-8 items-start">
           <img
-            src="images/NAU3315.jpg"
+            src="/images/executive1.jpg"
             alt="Dr. Chidiebere Obi - President"
             className="w-full md:w-64 h-64 object-cover rounded-xl shadow-md mx-auto md:mx-0"
           />

@@ -6,7 +6,7 @@ const Executives = () => {
     {
       name: "Dr. Chidiebere Obi",
       position: "President",
-      image: "/images/NAU3315.jpg",
+      image: "/images/executive1.jpg",
       bio: "Leading the alumni network with vision and dedication",
     },
     {
@@ -24,7 +24,7 @@ const Executives = () => {
     {
       name: "Dr. Onyeka Uzowulu",
       position: "Assistant Secretary",
-      image: "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&w=600&q=80",
+      image: "/images/executive4.jpg",
       bio: "Managing financial resources with transparency",
     },
     {
@@ -48,7 +48,7 @@ const Executives = () => {
     {
       name: "Francis Aleke",
       position: "Public Relations Officer",
-      image: "https://images.unsplash.com/-1580489944761-15a19d654956?auto=format&fit=crop&w=600&q=80",
+      image: "/images/executive8.jpg",
       bio: "Managing public relations and communications",
     },
   ];
