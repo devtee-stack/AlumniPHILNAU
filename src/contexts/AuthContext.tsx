@@ -30,7 +30,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           // Defer profile fetch to avoid blocking auth state update
           setTimeout(() => {
             if (session?.user) {
-              // Profile will be auto-created by trigger
               console.log('User signed in:', session.user.id);
             }
           }, 0);
@@ -50,18 +49,35 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   const signUp = async (email: string, password: string, fullName: string) => {
     const redirectUrl = `${window.location.origin}/`;
-    
-    const { error } = await supabase.auth.signUp({
+
+    const { data, error } = await supabase.auth.signUp({
       email,
       password,
       options: {
         emailRedirectTo: redirectUrl,
-        data: {
-          full_name: fullName,
-        }
-      }
+        data: { full_name: fullName },
+      },
     });
-    
+
+    // THIS IS THE MISSING PART — CREATE THE PROFILE ROW NOW!
+    if (data.user && !error) {
+      const { error: profileError } = await supabase
+        .from("profiles")
+        .upsert({
+          id: data.user.id,
+          email: email,
+          full_name: fullName,
+          updated_at: new Date().toISOString(),
+        });
+
+      if (profileError) {
+        console.error("Failed to create profile:", profileError);
+        toast.error("Account created but profile setup failed");
+      } else {
+        toast.success("Welcome! Your profile is ready");
+      }
+    }
+
     return { error };
   };
 

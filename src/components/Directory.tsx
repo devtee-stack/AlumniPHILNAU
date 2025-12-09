@@ -1,37 +1,29 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { supabase } from "@/integrations/supabase/client";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Search } from "lucide-react";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Search, Loader2 } from "lucide-react";
 
-const alumni = [
-  {
-    name: "Chinedu Okoro",
-    image: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=600&q=80",
-    degree: "M.A. Ethics",
-    year: "2018",
-    profession: "Education Consultant",
-    location: "Lagos, Nigeria",
-  },
-  {
-    name: "Amina Yusuf",
-    image: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=600&q=80",
-    degree: "Ph.D. African Philosophy",
-    year: "2015",
-    profession: "University Professor",
-    location: "Abuja, Nigeria",
-  },
-  {
-    name: "Emeka Nwosu",
-    image: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=600&q=80",
-    degree: "B.A. Logic",
-    year: "2020",
-    profession: "Software Developer",
-    location: "Berlin, Germany",
-  },
-];
+type Profile = {
+  id: string;
+  full_name: string;
+  avatar_url: string | null;
+  graduation_year: number | null;
+  profession: string | null;
+  location: string | null;
+  degree: string | null;
+};
 
 const Directory = () => {
+  const [profiles, setProfiles] = useState<Profile[]>([]);
+  const [loading, setLoading] = useState(true);
   const [filters, setFilters] = useState({
     specialization: "",
     year: "",
@@ -39,12 +31,61 @@ const Directory = () => {
     industry: "",
   });
 
+  // Fetch real profiles from Supabase
+  useEffect(() => {
+    const fetchProfiles = async () => {
+      setLoading(true);
+      const { data, error } = await supabase
+        .from("profiles")
+        .select("id, full_name, avatar_url, graduation_year, profession, location, degree")
+        .order("full_name");
+
+      if (error) {
+        console.error("Error fetching profiles:", error);
+      } else {
+        setProfiles(data || []);
+      }
+      setLoading(false);
+    };
+
+    fetchProfiles();
+  }, []);
+
+  // Filter logic
+  const filteredProfiles = profiles.filter((p) => {
+    if (filters.year && p.graduation_year) {
+      const year = p.graduation_year.toString();
+      if (filters.year === "2020-2023" && !(year >= "2020" && year <= "2023")) return false;
+      if (filters.year === "2010-2019" && !(year >= "2010" && year <= "2019")) return false;
+      if (filters.year === "2000-2009" && !(year >= "2000" && year <= "2009")) return false;
+    }
+    if (filters.location && p.location && !p.location.toLowerCase().includes(filters.location.toLowerCase()))
+      return false;
+    if (filters.industry && p.profession && !p.profession.toLowerCase().includes(filters.industry.toLowerCase()))
+      return false;
+    if (filters.specialization && p.degree && !p.degree.toLowerCase().includes(filters.specialization.toLowerCase()))
+      return false;
+    return true;
+  });
+
+  if (loading) {
+    return (
+      <div className="container mx-auto px-4 py-20 text-center">
+        <Loader2 className="h-10 w-10 animate-spin mx-auto mb-4" />
+        <p>Loading alumni directory...</p>
+      </div>
+    );
+  }
+
   return (
-    <div className="container mx-auto px-4">
+    <div className="container mx-auto px-4 py-8">
       <h2 className="text-3xl md:text-4xl font-bold text-center mb-8 md:mb-12 text-primary">
         Find Alumni - Directory
       </h2>
-      <Card className="p-6 md:p-8 shadow-lg">
+
+      {/* Your existing filter UI */}
+      <Card className="p-6 md:p-8 shadow-lg mb-8">
+        {/* Keep all your Select filters exactly as they are */}
         <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
           <div>
             <label className="text-sm font-semibold text-muted-foreground mb-2 block">Specialization</label>
@@ -111,35 +152,50 @@ const Directory = () => {
             Search Alumni
           </Button>
           <p className="text-sm text-muted-foreground">
-            Tip: Guests can browse — register to contact alumni.
+            {filteredProfiles.length} alumni found • Register to contact
           </p>
         </div>
 
-        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
-          {alumni.map((person, index) => (
-            <Card key={index} className="p-4 hover:shadow-lg transition-all hover:-translate-y-1 animate-fade-in" style={{ animationDelay: `${index * 100}ms` }}>
+        {/* Real dynamic list */}
+        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
+          {filteredProfiles.map((person, index) => (
+            <Card
+              key={person.id}
+              className="p-4 hover:shadow-lg transition-all hover:-translate-y-1"
+              style={{ animationDelay: `${index * 100}ms` }}
+            >
               <div className="flex gap-4">
                 <img
-                  src={person.image}
-                  alt={person.name}
-                  className="w-20 h-20 rounded-lg object-cover"
+                  src={
+                    person.avatar_url ||
+                    `https://ui-avatars.com/api/?name=${encodeURIComponent(person.full_name)}&background=FFD700&color=000`
+                  }
+                  alt={person.full_name}
+                  className="w-20 h-20 rounded-lg object-cover border-2 border-gold"
                 />
                 <div className="flex-1 min-w-0">
-                  <h4 className="font-bold text-primary truncate">{person.name}</h4>
+                  <h4 className="font-bold text-primary truncate">{person.full_name}</h4>
                   <p className="text-sm text-muted-foreground">
-                    {person.degree}, {person.year}
+                    {person.degree || "Philosophy Alumnus"}
+                    {person.graduation_year && `, ${person.graduation_year}`}
                   </p>
-                  <p className="text-sm text-muted-foreground">
-                    {person.profession}
-                  </p>
-                  <p className="text-sm text-muted-foreground">
-                    {person.location}
-                  </p>
+                  {person.profession && (
+                    <p className="text-sm text-muted-foreground truncate">{person.profession}</p>
+                  )}
+                  {person.location && (
+                    <p className="text-sm text-muted-foreground">{person.location}</p>
+                  )}
                 </div>
               </div>
             </Card>
           ))}
         </div>
+
+        {filteredProfiles.length === 0 && (
+          <p className="text-center py-12 text-muted-foreground">
+            No alumni match your filters yet. Be the first to complete your profile!
+          </p>
+        )}
       </Card>
     </div>
   );
