@@ -19,6 +19,8 @@ type Profile = {
   profession: string | null;
   location: string | null;
   degree: string | null;
+  specialization: string | null;
+  industry: string | null;
 };
 
 const Directory = () => {
@@ -37,7 +39,7 @@ const Directory = () => {
       setLoading(true);
       const { data, error } = await supabase
         .from("profiles")
-        .select("id, full_name, avatar_url, graduation_year, profession, location, degree")
+        .select("id, full_name, avatar_url, graduation_year, profession, location, degree, specialization, industry")
         .order("full_name");
 
       if (error) {
@@ -54,16 +56,15 @@ const Directory = () => {
   // Filter logic
   const filteredProfiles = profiles.filter((p) => {
     if (filters.year && p.graduation_year) {
-      const year = p.graduation_year.toString();
-      if (filters.year === "2020-2023" && !(year >= "2020" && year <= "2023")) return false;
-      if (filters.year === "2010-2019" && !(year >= "2010" && year <= "2019")) return false;
-      if (filters.year === "2000-2009" && !(year >= "2000" && year <= "2009")) return false;
+      if (filters.year === "2020-2023" && !(p.graduation_year >= 2020 && p.graduation_year <= 2023)) return false;
+      if (filters.year === "2010-2019" && !(p.graduation_year >= 2010 && p.graduation_year <= 2019)) return false;
+      if (filters.year === "2000-2009" && !(p.graduation_year >= 2000 && p.graduation_year <= 2009)) return false;
     }
     if (filters.location && p.location && !p.location.toLowerCase().includes(filters.location.toLowerCase()))
       return false;
-    if (filters.industry && p.profession && !p.profession.toLowerCase().includes(filters.industry.toLowerCase()))
+    if (filters.industry && p.industry && !p.industry.toLowerCase().includes(filters.industry.toLowerCase()))
       return false;
-    if (filters.specialization && p.degree && !p.degree.toLowerCase().includes(filters.specialization.toLowerCase()))
+    if (filters.specialization && p.specialization && !p.specialization.toLowerCase().includes(filters.specialization.toLowerCase()))
       return false;
     return true;
   });
@@ -161,7 +162,7 @@ const Directory = () => {
           {filteredProfiles.map((person, index) => (
             <Card
               key={person.id}
-              className="p-4 hover:shadow-lg transition-all hover:-translate-y-1"
+              className="p-4 hover:shadow-lg transition-all hover:-translate-y-1 animate-fade-in"
               style={{ animationDelay: `${index * 100}ms` }}
             >
               <div className="flex gap-4">
