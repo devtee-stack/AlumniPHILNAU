@@ -1,62 +1,113 @@
-import { Card } from "@/components/ui/card";
+import { useEffect, useState } from "react";
+import { supabase } from "@/integrations/supabase/client";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Skeleton } from "@/components/ui/skeleton";
 
-const newsItems = [
-  {
-    image: "https://images.unsplash.com/photo-1524178232363-1fb2b075b655?auto=format&fit=crop&w=1200&q=60",
-    title: "UNIZIK Launches Philosophy Research Fellowship",
-    description:
-      "A new fellowship supporting early-career researchers working on ethics, African philosophy, and philosophy of technology has been announced. Applications open Nov 2025.",
-  },
-  {
-    image: "https://images.unsplash.com/photo-1503676260728-1c00da094a0b?auto=format&fit=crop&w=1200&q=60",
-    title: "Call for Papers: Annual Conference on African Philosophy",
-    description:
-      "Organizers request submissions on decolonial methodologies, indigenous knowledge systems, and contemporary African thought. Deadline: Jan 15, 2026.",
-  },
-  {
-    image: "https://images.unsplash.com/photo-1513258496099-48168024aec0?auto=format&fit=crop&w=1200&q=60",
-    title: "Alumni Spotlight: Dr. Funmi Adebayo",
-    description:
-      "Dr. Adebayo discusses community-focused research and new pedagogies in ethics. Her interview highlights paths from scholarship to public engagement.",
-  },
-  {
-    image: "https://images.unsplash.com/photo-1517245386807-bb43f82c33c4?auto=format&fit=crop&w=1200&q=60",
-    title: "New Centre for Philosophy & Public Policy",
-    description:
-      "The department announced plans to convene cross-disciplinary projects on ethics and governance. The centre will host policy fellowships and public lectures.",
-  },
-  {
-    image: "https://images.unsplash.com/photo-1531482615713-2afd69097998?auto=format&fit=crop&w=1200&q=60",
-    title: "Workshop: Ethics of AI for Humanitarian Practice",
-    description:
-      "A two-day workshop for researchers and practitioners covering ethical impact assessment, data governance, and community consent. Registration opens soon.",
-  },
-];
+type NewsItem = {
+  id: string;
+  title: string;
+  excerpt: string | null;
+  featured_image_url: string | null;
+  created_at: string;
+};
 
 const News = () => {
+  const [newsItems, setNewsItems] = useState<NewsItem[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchNews = async () => {
+      const { data, error } = await supabase
+        .from("news_articles")
+        .select("id, title, excerpt, featured_image_url, created_at")
+        .eq("published", true)
+        .order("created_at", { ascending: false });
+
+      if (error) {
+        console.error("Error fetching news:", error);
+      } else {
+        setNewsItems(data || []);
+      }
+      setLoading(false);
+    };
+
+    fetchNews();
+  }, []);
+
+  // Loading state (beautiful skeletons)
+  if (loading) {
+    return (
+      <div className="container mx-auto px-4 py-8">
+        <h2 className="text-3xl md:text-4xl font-bold text-center mb-8 text-primary">
+          Latest News
+        </h2>
+        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
+          {[...Array(6)].map((_, i) => (
+            <Card key={i} className="overflow-hidden">
+              <Skeleton className="w-full h-48" />
+              <CardContent className="p-5 space-y-3">
+                <Skeleton className="h-6 w-3/4" />
+                <Skeleton className="h-4 w-full" />
+                <Skeleton className="h-4 w-5/6" />
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      </div>
+    );
+  }
+
+  // Empty state
+  if (newsItems.length === 0) {
+    return (
+      <div className="container mx-auto px-4 py-20 text-center">
+        <h2 className="text-3xl font-bold mb-4 text-primary">Latest News</h2>
+        <p className="text-muted-foreground text-lg">No news yet — check back soon!</p>
+      </div>
+    );
+  }
+
   return (
-    <div className="container mx-auto px-4">
+    <div className="container mx-auto px-4 py-8">
       <h2 className="text-3xl md:text-4xl font-bold text-center mb-8 md:mb-12 text-primary">
         Latest News
       </h2>
-      <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
+
+      {/* Responsive grid: 1 column mobile, 2 tablet, 3 desktop */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
         {newsItems.map((item, index) => (
           <Card
-            key={index}
-            className="overflow-hidden hover:shadow-lg transition-all hover:-translate-y-1 animate-fade-in"
+            key={item.id}
+            className="overflow-hidden hover:shadow-xl transition-all duration-300 hover:-translate-y-2"
             style={{ animationDelay: `${index * 100}ms` }}
           >
-            <img
-              src={item.image}
-              alt={item.title}
-              className="w-full h-48 object-cover"
-            />
-            <div className="p-5">
-              <h4 className="font-bold text-lg mb-2 text-foreground">{item.title}</h4>
-              <p className="text-sm text-muted-foreground leading-relaxed">
-                {item.description}
+            {item.featured_image_url ? (
+              <img
+                src={item.featured_image_url}
+                alt={item.title}
+                className="w-full h-48 object-cover"
+              />
+            ) : (
+              <div className="bg-muted w-full h-48 flex items-center justify-center">
+                <span className="text-muted-foreground text-sm">No image</span>
+              </div>
+            )}
+
+            <CardContent className="p-5">
+              <h4 className="font-bold text-lg mb-2 line-clamp-2 text-foreground">
+                {item.title}
+              </h4>
+              <p className="text-sm text-muted-foreground leading-relaxed line-clamp-3">
+                {item.excerpt || "No description available"}
               </p>
-            </div>
+              <p className="text-xs text-muted-foreground mt-3">
+                {new Date(item.created_at).toLocaleDateString("en-GB", {
+                  day: "numeric",
+                  month: "long",
+                  year: "numeric",
+                })}
+              </p>
+            </CardContent>
           </Card>
         ))}
       </div>

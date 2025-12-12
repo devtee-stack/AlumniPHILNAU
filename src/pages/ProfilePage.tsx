@@ -1,5 +1,6 @@
 import { useParams } from "react-router-dom";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient, useMutation } from "@tanstack/react-query";
+import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import Profile from "@/components/Profile";
@@ -8,21 +9,29 @@ import { Profile as ProfileType } from "@/hooks/useProfile";
 const ProfilePage = () => {
   const { userId } = useParams<{ userId: string }>();
   const { user } = useAuth();
+
+  // THIS IS THE ONLY LINE YOU ADD/CHANGE
+  const targetId = userId || user?.id;
+
+  if (!targetId) {
+    return <div className="p-8 text-center">Please log in to view profile</div>;
+  }
+
   const queryClient = useQueryClient();
 
   const updateProfile = useMutation({
     mutationFn: async (updates: Partial<ProfileType>) => {
-      if (!user || !userId) throw new Error('Not authenticated or no user ID');
+      if (!user || !targetId) throw new Error('Not authenticated or no user ID');
 
       const { error } = await supabase
         .from('profiles')
         .update(updates)
-        .eq('id', userId);
+        .eq('id', targetId);
 
       if (error) throw error;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['profile', userId] });
+      queryClient.invalidateQueries({ queryKey: ['profile', targetId] });
       toast.success('Profile updated successfully');
     },
     onError: (error: any) => {
@@ -31,23 +40,23 @@ const ProfilePage = () => {
   });
 
   const { data: profile, isLoading } = useQuery({
-    queryKey: ['profile', userId],
+    queryKey: ['profile', targetId],
     queryFn: async () => {
-      if (!userId) return null;
+      if (!targetId) return null;
 
       const { data, error } = await supabase
         .from('profiles')
         .select('*')
-        .eq('id', userId)
+        .eq('id', targetId)
         .single();
 
       if (error) throw error;
       return data as ProfileType;
     },
-    enabled: !!userId,
+    enabled: !!targetId,
   });
 
-  const isOwnProfile = user?.id === userId;
+  const isOwnProfile = user?.id === targetId;
 
   return (
     <div className="min-h-screen bg-background">

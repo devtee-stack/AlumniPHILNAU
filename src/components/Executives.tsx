@@ -87,13 +87,13 @@ const Executives = () => {
     {
       name: "Godwin Imo Njoku",
       position: "Trustee",
-      image: "https://images.unsplash.com/photo-1594744803329-e58b31de8bf5?auto=format&fit=crop&w=600&q=80",
+      image: "https://images./photo-1594744803329-e58b31de8bf5?auto=format&fit=crop&w=600&q=80",
       bio: "Renowned scholar in contemporary African thought",
     },
     {
       name: "Cynthia Enem",
       position: "Trustee",
-      image: "https://images.unsplash.com/photo-1594744803329-e58b31de8bf5?auto=format&fit=crop&w=600&q=80",
+      image: "https://images./photo-1594744803329-e58b31de8bf5?auto=format&fit=crop&w=600&q=80",
       bio: "Renowned scholar in contemporary African thought",
     },
     {
