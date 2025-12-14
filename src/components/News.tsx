@@ -6,8 +6,8 @@ import { Skeleton } from "@/components/ui/skeleton";
 type NewsItem = {
   id: string;
   title: string;
-  excerpt: string | null;
-  featured_image_url: string | null;
+  description: string;
+  image_url: string | null;
   created_at: string;
 };
 
@@ -18,9 +18,8 @@ const News = () => {
   useEffect(() => {
     const fetchNews = async () => {
       const { data, error } = await supabase
-        .from("news_articles")
-        .select("id, title, excerpt, featured_image_url, created_at")
-        .eq("published", true)
+        .from("news")
+        .select("id, title, description, image_url, created_at")
         .order("created_at", { ascending: false });
 
       if (error) {
