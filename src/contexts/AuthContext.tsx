@@ -21,21 +21,30 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   useEffect(() => {
     // Set up auth state listener
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (event, session) => {
-        setSession(session);
-        setUser(session?.user ?? null);
-        
-        if (event === 'SIGNED_IN') {
-          // Defer profile fetch to avoid blocking auth state update
-          setTimeout(() => {
-            if (session?.user) {
-              console.log('User signed in:', session.user.id);
-            }
-          }, 0);
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+      setSession(session);
+      setUser(session?.user ?? null);
+
+      if (event === 'SIGNED_IN' || event === 'INITIAL_SESSION') {
+        if (session?.user) {
+          // Check if profile exists and has full_name
+          const { data: profile } = await supabase
+            .from("profiles")
+            .select("full_name")
+            .eq("id", session.user.id)
+            .single()
+            .throwOnError(); // don't crash if no row
+
+          // If no profile or full_name is empty → they need to complete it
+          if (!profile || !profile.full_name) {
+            // You can set a state or use localStorage to remember
+            localStorage.setItem("needsProfileSetup", "true");
+          } else {
+            localStorage.removeItem("needsProfileSetup");
+          }
         }
       }
-    );
+    });
 
     // Check for existing session
     supabase.auth.getSession().then(({ data: { session } }) => {

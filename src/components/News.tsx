@@ -6,20 +6,41 @@ import { Skeleton } from "@/components/ui/skeleton";
 type NewsItem = {
   id: string;
   title: string;
-  description: string;
-  image_url: string | null;
+  excerpt: string;
+  content: string;
+  featured_image_url: string | null;
   created_at: string;
 };
 
 const News = () => {
   const [newsItems, setNewsItems] = useState<NewsItem[]>([]);
   const [loading, setLoading] = useState(true);
+  const [expandedArticle, setExpandedArticle] = useState<string | null>(null);
+
+  // Helper function to get the full Supabase storage URL
+  const getImageUrl = (imagePath: string | null) => {
+    if (!imagePath) return null;
+
+    // If it's already a full URL, return as-is
+    if (imagePath.startsWith('http://') || imagePath.startsWith('https://')) {
+      return imagePath;
+    }
+
+    // Otherwise, construct the full Supabase storage URL
+    const { data } = supabase.storage.from('news-images').getPublicUrl(imagePath);
+    return data.publicUrl;
+  };
+
+  // Function to toggle article content expansion
+  const toggleArticleContent = (articleId: string) => {
+    setExpandedArticle(expandedArticle === articleId ? null : articleId);
+  };
 
   useEffect(() => {
     const fetchNews = async () => {
       const { data, error } = await supabase
-        .from("news")
-        .select("id, title, description, image_url, created_at")
+        .from("news_articles")
+        .select("id, title, excerpt, content, featured_image_url, created_at")
         .order("created_at", { ascending: false });
 
       if (error) {
@@ -80,9 +101,9 @@ const News = () => {
             className="overflow-hidden hover:shadow-xl transition-all duration-300 hover:-translate-y-2"
             style={{ animationDelay: `${index * 100}ms` }}
           >
-            {item.featured_image_url ? (
+            {getImageUrl(item.featured_image_url) ? (
               <img
-                src={item.featured_image_url}
+                src={getImageUrl(item.featured_image_url)!}
                 alt={item.title}
                 className="w-full h-48 object-cover"
               />
@@ -96,9 +117,21 @@ const News = () => {
               <h4 className="font-bold text-lg mb-2 line-clamp-2 text-foreground">
                 {item.title}
               </h4>
-              <p className="text-sm text-muted-foreground leading-relaxed line-clamp-3">
+              <p
+                className="text-sm text-muted-foreground leading-relaxed line-clamp-3 cursor-pointer hover:text-primary transition-colors"
+                onClick={() => toggleArticleContent(item.id)}
+              >
                 {item.excerpt || "No description available"}
+                <span className="ml-2 text-xs text-primary">
+                  {expandedArticle === item.id ? '▼' : '▶'}
+                </span>
               </p>
+
+              {expandedArticle === item.id && (
+                <div className="mt-4 p-4 bg-muted rounded-lg">
+                  <div className="prose prose-sm max-w-none" dangerouslySetInnerHTML={{ __html: item.content }} />
+                </div>
+              )}
               <p className="text-xs text-muted-foreground mt-3">
                 {new Date(item.created_at).toLocaleDateString("en-GB", {
                   day: "numeric",

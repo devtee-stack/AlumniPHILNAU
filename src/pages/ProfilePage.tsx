@@ -32,6 +32,10 @@ const ProfilePage = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['profile', targetId] });
+      // Clear the profile setup flag if this is the user's own profile
+      if (isOwnProfile) {
+        localStorage.removeItem("needsProfileSetup");
+      }
       toast.success('Profile updated successfully');
     },
     onError: (error: any) => {
