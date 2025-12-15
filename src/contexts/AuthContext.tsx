@@ -43,6 +43,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
             localStorage.removeItem("needsProfileSetup");
           }
         }
+      } else if (event === 'SIGNED_OUT') {
+        // Clear profile setup flag on sign out
+        localStorage.removeItem("needsProfileSetup");
       }
     });
 
@@ -68,23 +71,12 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       },
     });
 
-    // THIS IS THE MISSING PART — CREATE THE PROFILE ROW NOW!
+    // Profile creation is now handled by the database trigger
+    // The trigger will create the profile with the correct full_name from metadata
     if (data.user && !error) {
-      const { error: profileError } = await supabase
-        .from("profiles")
-        .upsert({
-          id: data.user.id,
-          email: email,
-          full_name: fullName,
-          updated_at: new Date().toISOString(),
-        });
-
-      if (profileError) {
-        console.error("Failed to create profile:", profileError);
-        toast.error("Account created but profile setup failed");
-      } else {
-        toast.success("Welcome! Your profile is ready");
-      }
+      // Force profile setup navigation after registration
+      localStorage.setItem("needsProfileSetup", "true");
+      toast.success("Welcome! Your profile is ready");
     }
 
     return { error };
@@ -100,9 +92,23 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const signOut = async () => {
-    const { error } = await supabase.auth.signOut();
-    if (error) {
-      toast.error('Error signing out');
+    try {
+      // Clear local state immediately
+      setUser(null);
+      setSession(null);
+      localStorage.removeItem("needsProfileSetup");
+
+      const { error } = await supabase.auth.signOut();
+      if (error) {
+        console.error('Sign out error:', error);
+        toast.error('Error signing out');
+        // If sign out failed, we might need to restore state, but for now just show error
+      } else {
+        console.log('Successfully signed out');
+      }
+    } catch (err) {
+      console.error('Unexpected error during sign out:', err);
+      toast.error('Unexpected error during sign out');
     }
   };
 
