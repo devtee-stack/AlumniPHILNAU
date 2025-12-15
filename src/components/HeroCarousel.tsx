@@ -3,7 +3,7 @@ import { ChevronLeft, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 interface HeroCarouselProps {
-  openAuthModal: () => void;
+  openAuthModal: (mode: "login" | "register") => void;
 }
 
 const slides = [
@@ -95,7 +95,7 @@ const HeroCarousel = ({ openAuthModal }: HeroCarouselProps) => {
               <div className="flex flex-col sm:flex-row gap-4 justify-center">
                 <Button
                   onClick={() =>
-                    slide.cta1Link ? scrollToSection(slide.cta1Link) : openAuthModal()
+                    slide.cta1Link ? scrollToSection(slide.cta1Link) : openAuthModal("register")
                   }
                   size="lg"
                   variant="gold"

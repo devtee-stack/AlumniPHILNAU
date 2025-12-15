@@ -46,7 +46,7 @@ const Profile = ({ profile, isLoading, onUpdate, isOwnProfile = true }: ProfileP
     try {
       const fileExt = file.name.split('.').pop();
       const fileName = `${profile.id}.${fileExt}`;
-      const filePath = `avatars/${fileName}`;
+      const filePath = `${profile.id}/${fileName}`;
 
       const { error: uploadError } = await supabase.storage
         .from('avatars')
