@@ -6,7 +6,7 @@ const Footer = () => {
       <div className="container mx-auto px-4">
         <div className="grid sm:grid-cols-2 md:grid-cols-3 gap-8 mb-8">
           <div>
-            <h4 className="font-bold text-lg mb-4 text-gold">Alumni Association</h4>
+            <h4 className="font-bold text-lg mb-4 text-gold">Alumni Association of Department of Philosophy</h4>
             <p className="text-sm text-primary-foreground/80 leading-relaxed">
               Connecting philosophy graduates worldwide for professional development, intellectual exchange, and community building.
             </p>
