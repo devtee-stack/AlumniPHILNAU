@@ -15,6 +15,7 @@ import EventsPage from "./pages/EventsPage";
 import ForumPage from "./pages/ForumPage";
 import ContactPage from "./pages/ContactPage";
 import ProfilePage from "./pages/ProfilePage";
+import NewsArticlePage from "./pages/NewsArticlePage";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -53,8 +54,9 @@ const App = () => (
             <Route path="/events" element={<EventsPage />} />
             <Route path="/forum" element={<ForumPage />} />
             <Route path="/contact" element={<ContactPage />} />
-              <Route path="/profile" element={<ProfilePage />} />
+<Route path="/profile" element={<ProfilePage />} />
               <Route path="/profile/:userId" element={<ProfilePage />} />
+              <Route path="/news/:articleId" element={<NewsArticlePage />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>

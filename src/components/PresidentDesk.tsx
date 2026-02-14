@@ -25,7 +25,7 @@ const PresidentDesk = () => {
             </p>
             <p className="text-primary font-bold mt-6">
               Warm regards,<br />
-              Dr. Chidiebere Obi<br />
+              Prof. Chidiebere Obi<br />
               President, UNIZIK Philosophy Alumni Network
             </p>
           </div>

@@ -4,10 +4,10 @@ import { Card } from "@/components/ui/card";
 const Executives = () => {
   const executives = [
     {
-      name: "Dr. Chidiebere Obi",
+      name: "Prof. Chidiebere Obi",
       position: "President",
       image: "/images/executive1.jpg",
-      bio: "Associate Professor, Department of Philosophy, UNIZIK",
+      bio: "Professor, Department of Philosophy, UNIZIK",
     },
     {
       name: "Joy Egbujor",
