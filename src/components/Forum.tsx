@@ -148,9 +148,26 @@ const Forum = ({ openAuthModal }: { openAuthModal: () => void }) => {
       setNewTitle("");
       setNewContent("");
       setNewCategoryId("");
-      // Refresh threads
-      setThreads([]);
-      setActiveCategory("All");
+      
+      // Refresh threads by fetching from database
+      setLoading(true);
+      let query = supabase
+        .from("forum_threads")
+        .select("*")
+        .order("created_at", { ascending: false });
+
+      if (activeCategory !== "All") {
+        const category = categories.find(c => c.name === activeCategory);
+        if (category) {
+          query = query.eq("category_id", category.id);
+        }
+      }
+
+      const { data, error: fetchError } = await query;
+
+      if (fetchError) toast.error("Failed to load threads");
+      else setThreads(data || []);
+      setLoading(false);
     }
   };
 
