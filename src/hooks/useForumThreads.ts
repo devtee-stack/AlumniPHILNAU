@@ -4,12 +4,12 @@ import { supabase } from '@/integrations/supabase/client';
 export interface ForumThread {
   id: string;
   title: string;
-  content: string;
-  author_id: string;
+  body: string;
+  user_id: string;
   category_id: string;
   reply_count: number;
   created_at: string;
-  author_name?: string;
+  user_name?: string;
   category_name?: string;
 }
 
@@ -33,13 +33,13 @@ export const useForumThreads = (categoryId?: string) => {
       const threadsWithDetails = await Promise.all(
         (threads || []).map(async (thread) => {
           const [profileResult, categoryResult] = await Promise.all([
-            supabase.from('profiles').select('full_name').eq('id', thread.author_id).single(),
+            supabase.from('profiles').select('full_name').eq('id', thread.user_id).single(),
             supabase.from('forum_categories').select('name').eq('id', thread.category_id).single(),
           ]);
 
           return {
             ...thread,
-            author_name: profileResult.data?.full_name || 'Unknown',
+            user_name: profileResult.data?.full_name || 'Unknown',
             category_name: categoryResult.data?.name || 'General',
           };
         })

@@ -13,9 +13,9 @@ import { toast } from "sonner";
 type Thread = {
   id: string;
   title: string;
-  content: string;
+  body: string;
   category_id: string;
-  author_id: string;
+  user_id: string;
   reply_count: number;
   created_at: string;
 };
@@ -49,7 +49,7 @@ const Forum = ({ openAuthModal }: { openAuthModal: () => void }) => {
   // New thread form
   const [showNewThread, setShowNewThread] = useState(false);
   const [newTitle, setNewTitle] = useState("");
-  const [newContent, setNewContent] = useState("");
+  const [newBody, setNewBody] = useState("");
   const [newCategoryId, setNewCategoryId] = useState("");
 
   // Reply form
@@ -134,48 +134,63 @@ const Forum = ({ openAuthModal }: { openAuthModal: () => void }) => {
       return;
     }
 
-    // Only include category_id if a category is selected
+    if (!newTitle || !newBody) {
+      toast.error("Title and body are required");
+      return;
+    }
+
+    if (!newCategoryId) {
+      toast.error("Please choose a category");
+      return;
+    }
+
     const threadData = {
       title: newTitle,
-      content: newContent,
+      body: newBody,
+      category_id: newCategoryId,
       user_id: user.id,
     };
 
-    // Add category_id only if a category is selected (not empty string)
-    if (newCategoryId) {
-      threadData.category_id = newCategoryId;
+    console.log("Thread payload:", threadData);
+
+    const { data, error } = await supabase
+      .from("forum_threads")
+      .insert(threadData)
+      .select();
+
+    console.log("Insert data:", data);
+    console.error("Insert error:", error);
+
+    if (error) {
+      toast.error(error.message);
+      return;
     }
 
-    const { error } = await supabase.from("forum_threads").insert(threadData);
+    toast.success("Thread created!");
+    setShowNewThread(false);
+    setNewTitle("");
+    setNewBody("");
+    setNewCategoryId("");
 
-    if (error) toast.error("Failed to create thread");
-    else {
-      toast.success("Thread created!");
-      setShowNewThread(false);
-      setNewTitle("");
-      setNewContent("");
-      setNewCategoryId("");
-      
-      // Refresh threads by fetching from database
-      setLoading(true);
-      let query = supabase
-        .from("forum_threads")
-        .select("*")
-        .order("created_at", { ascending: false });
+    // Refresh threads by fetching from database
+    setLoading(true);
+    let query = supabase
+      .from("forum_threads")
+      .select("*")
+      .order("created_at", { ascending: false });
 
-      if (activeCategory !== "All") {
-        const category = categories.find(c => c.name === activeCategory);
-        if (category) {
-          query = query.eq("category_id", category.id);
-        }
+    if (activeCategory !== "All") {
+      const category = categories.find(c => c.name === activeCategory);
+      if (category) {
+        query = query.eq("category_id", category.id);
       }
-
-      const { data, error: fetchError } = await query;
-
-      if (fetchError) toast.error("Failed to load threads");
-      else setThreads(data || []);
-      setLoading(false);
     }
+
+    const { data: refreshedThreads, error: fetchError } = await query;
+
+    if (fetchError) toast.error("Failed to load threads");
+    else setThreads(refreshedThreads || []);
+    setLoading(false);
   };
 
   const handleReply = async () => {
@@ -287,10 +302,10 @@ const Forum = ({ openAuthModal }: { openAuthModal: () => void }) => {
                       <Card className="p-6 hover:shadow-lg transition-all">
                         <h3 className="text-xl font-bold mb-2">{thread.title}</h3>
                         <p className="text-muted-foreground line-clamp-2 mb-3">
-                          {thread.content}
+                          {thread.body}
                         </p>
                         <div className="flex items-center gap-4 text-sm text-muted-foreground">
-                          <span>by {thread.author_id.slice(0, 8)}...</span>
+                <span>by {thread.user_id.slice(0, 8)}...</span>
                           <span>{new Date(thread.created_at).toLocaleDateString()}</span>
                           {category && <Badge variant="outline">{category.name}</Badge>}
                         </div>
@@ -321,7 +336,7 @@ const Forum = ({ openAuthModal }: { openAuthModal: () => void }) => {
                   onChange={(e) => setNewCategoryId(e.target.value)}
                   className="w-full p-2 border rounded"
                 >
-                  <option value="">Choose category (optional)</option>
+<option value="">Choose category</option>
                   {categories.map((c) => (
                     <option key={c.id} value={c.id}>
                       {c.name}
@@ -331,8 +346,8 @@ const Forum = ({ openAuthModal }: { openAuthModal: () => void }) => {
                 <Textarea
                   placeholder="Write your post..."
                   rows={8}
-                  value={newContent}
-                  onChange={(e) => setNewContent(e.target.value)}
+                  value={newBody}
+                  onChange={(e) => setNewBody(e.target.value)}
                 />
                 <div className="flex gap-3 justify-end">
                   <Button variant="outline" onClick={() => setShowNewThread(false)}>
@@ -368,13 +383,13 @@ const Forum = ({ openAuthModal }: { openAuthModal: () => void }) => {
             <CardHeader>
               <CardTitle className="text-2xl">{currentThread.title}</CardTitle>
               <div className="flex items-center gap-4 text-sm text-muted-foreground">
-                <span>by {currentThread.author_id.slice(0, 8)}...</span>
+                <span>by {currentThread.user_id.slice(0, 8)}...</span>
                 <span>{new Date(currentThread.created_at).toLocaleString()}</span>
                 {category && <Badge variant="outline">{category.name}</Badge>}
               </div>
             </CardHeader>
             <CardContent>
-              <p className="whitespace-pre-wrap text-foreground">{currentThread.content}</p>
+              <p className="whitespace-pre-wrap text-foreground">{currentThread.body}</p>
             </CardContent>
           </Card>
         )}
