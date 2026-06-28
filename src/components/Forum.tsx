@@ -134,12 +134,19 @@ const Forum = ({ openAuthModal }: { openAuthModal: () => void }) => {
       return;
     }
 
-    const { error } = await supabase.from("forum_threads").insert({
+    // Only include category_id if a category is selected
+    const threadData = {
       title: newTitle,
       content: newContent,
-      category_id: newCategoryId,
-      author_id: user.id,
-    });
+      user_id: user.id,
+    };
+
+    // Add category_id only if a category is selected (not empty string)
+    if (newCategoryId) {
+      threadData.category_id = newCategoryId;
+    }
+
+    const { error } = await supabase.from("forum_threads").insert(threadData);
 
     if (error) toast.error("Failed to create thread");
     else {
@@ -180,7 +187,7 @@ const Forum = ({ openAuthModal }: { openAuthModal: () => void }) => {
     const { error } = await supabase.from("forum_replies").insert({
       thread_id: threadId,
       content: replyContent,
-      author_id: user.id,
+      user_id: user.id,
     });
 
     if (error) toast.error("Failed to post reply");
