@@ -1,17 +1,23 @@
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 
-export interface ForumThread {
+export type Thread = {
   id: string;
   title: string;
   body: string;
-  user_id: string;
+  excerpt?: string | null;
   category_id: string;
-  reply_count: number;
+  user_id: string;
+  reply_count: number | null;
   created_at: string;
+  updated_at?: string;
+
   user_name?: string;
+  avatar_url?: string | null;
   category_name?: string;
-}
+};
+
+export interface ForumThread extends Thread {}
 
 export const useForumThreads = (categoryId?: string) => {
   return useQuery({
@@ -19,7 +25,16 @@ export const useForumThreads = (categoryId?: string) => {
     queryFn: async () => {
       let query = supabase
         .from('forum_threads')
-        .select('*')
+        .select(`
+            *,
+            profiles(
+              full_name,
+              avatar_url
+            ),
+            forum_categories(
+              name
+            )
+          `)
         .order('created_at', { ascending: false });
 
       if (categoryId) {
@@ -29,23 +44,21 @@ export const useForumThreads = (categoryId?: string) => {
       const { data: threads, error: threadsError } = await query;
       if (threadsError) throw threadsError;
 
-      // Fetch related data separately
-      const threadsWithDetails = await Promise.all(
-        (threads || []).map(async (thread) => {
-          const [profileResult, categoryResult] = await Promise.all([
-            supabase.from('profiles').select('full_name').eq('id', thread.user_id).single(),
-            supabase.from('forum_categories').select('name').eq('id', thread.category_id).single(),
-          ]);
+      return (threads || []).map((t: any) => ({
+        id: t.id,
+        title: t.title,
+        body: t.body,
+        excerpt: t.excerpt ?? null,
+        category_id: t.category_id,
+        user_id: t.user_id,
+        reply_count: (t.reply_count ?? null) as number | null,
+        created_at: t.created_at,
+        updated_at: t.updated_at ?? undefined,
 
-          return {
-            ...thread,
-            user_name: profileResult.data?.full_name || 'Unknown',
-            category_name: categoryResult.data?.name || 'General',
-          };
-        })
-      );
-
-      return threadsWithDetails as ForumThread[];
+        user_name: t?.profiles?.full_name ?? undefined,
+        avatar_url: t?.profiles?.avatar_url ?? null,
+        category_name: t?.forum_categories?.name ?? undefined,
+      })) as ForumThread[];
     },
   });
 };

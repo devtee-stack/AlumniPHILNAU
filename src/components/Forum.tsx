@@ -14,18 +14,29 @@ type Thread = {
   id: string;
   title: string;
   body: string;
+  excerpt?: string | null;
   category_id: string;
   user_id: string;
-  reply_count: number;
+  reply_count: number | null;
+
   created_at: string;
+  updated_at?: string;
+
+  user_name?: string;
+  avatar_url?: string | null;
+  category_name?: string;
 };
 
 type Reply = {
   id: string;
   content: string;
-  author_id: string;
+  author_id: string; // forum_replies schema uses author_id (verified)
   created_at: string;
   thread_id: string;
+  updated_at?: string;
+
+  user_name?: string;
+  avatar_url?: string | null;
 };
 
 type Category = {
@@ -65,27 +76,50 @@ const Forum = ({ openAuthModal }: { openAuthModal: () => void }) => {
     fetchCategories();
   }, []);
 
-  // Fetch threads list
+  // Fetch threads list (joined in one query)
   useEffect(() => {
     if (!threadId) {
       const fetchThreads = async () => {
         setLoading(true);
+
         let query = supabase
           .from("forum_threads")
-          .select("*")
+          .select(`
+            *,
+            profiles(
+              full_name,
+              avatar_url
+            ),
+            forum_categories(
+              name
+            )
+          `)
           .order("created_at", { ascending: false });
 
         if (activeCategory !== "All") {
-          const category = categories.find(c => c.name === activeCategory);
-          if (category) {
-            query = query.eq("category_id", category.id);
-          }
+          const category = categories.find((c) => c.name === activeCategory);
+          if (category) query = query.eq("category_id", category.id);
         }
 
         const { data, error } = await query;
 
-        if (error) toast.error("Failed to load threads");
-        else setThreads(data || []);
+        if (error) {
+          toast.error("Failed to load threads");
+          setThreads([]);
+          setLoading(false);
+          return;
+        }
+
+        const mappedThreads: Thread[] = (data || []).map((t: any) => ({
+          ...t,
+          user_name: t.profiles?.full_name ?? undefined,
+          avatar_url: t.profiles?.avatar_url ?? null,
+          category_name: t.forum_categories?.name ?? undefined,
+          // ensure preview fields exist
+          excerpt: t.excerpt ?? null,
+        }));
+
+        setThreads(mappedThreads);
         setLoading(false);
       };
 
@@ -93,40 +127,71 @@ const Forum = ({ openAuthModal }: { openAuthModal: () => void }) => {
     }
   }, [threadId, activeCategory, categories]);
 
-  // Fetch single thread + replies
+  // Fetch single thread + replies (joined in one query for thread/profile/category)
   useEffect(() => {
     if (threadId) {
       const fetchThreadAndReplies = async () => {
         setLoading(true);
+        setCurrentThread(null);
 
-        // Fetch thread
-        const { data: threadData, error: threadError } = await supabase
+        const {
+          data: threadData,
+          error: threadError,
+        } = await supabase
           .from("forum_threads")
-          .select("*")
+          .select(`
+            *,
+            profiles(
+              full_name,
+              avatar_url
+            ),
+            forum_categories(
+              name
+            )
+          `)
           .eq("id", threadId)
           .single();
 
-        if (threadError) {
+        if (threadError || !threadData) {
+          setCurrentThread(null);
           toast.error("Thread not found");
-          navigate("/forum");
+          setLoading(false);
           return;
         }
-        setCurrentThread(threadData);
 
-        // Fetch replies
+        setCurrentThread({
+          ...threadData,
+          user_name: threadData.profiles?.full_name ?? undefined,
+          avatar_url: threadData.profiles?.avatar_url ?? null,
+          category_name: threadData.forum_categories?.name ?? undefined,
+          excerpt: threadData.excerpt ?? null,
+        });
+
         const { data: repliesData } = await supabase
           .from("forum_replies")
-          .select("*")
+          .select(`
+            *,
+            profiles(
+              full_name,
+              avatar_url
+            )
+          `)
           .eq("thread_id", threadId)
           .order("created_at");
 
-        setReplies(repliesData || []);
+        const mappedReplies: Reply[] = (repliesData || []).map((r: any) => ({
+          ...r,
+          user_name: r.profiles?.full_name ?? undefined,
+          avatar_url: r.profiles?.avatar_url ?? null,
+        }));
+
+        setReplies(mappedReplies);
         setLoading(false);
       };
 
       fetchThreadAndReplies();
     }
-  }, [threadId, navigate]);
+  }, [threadId]);
 
   const handleCreateThread = async () => {
     if (!user) {
@@ -147,9 +212,10 @@ const Forum = ({ openAuthModal }: { openAuthModal: () => void }) => {
     const threadData = {
       title: newTitle,
       body: newBody,
+      excerpt: newBody.substring(0, 180),
       category_id: newCategoryId,
       user_id: user.id,
-    };
+    } as any;
 
     console.log("Thread payload:", threadData);
 
@@ -172,24 +238,60 @@ const Forum = ({ openAuthModal }: { openAuthModal: () => void }) => {
     setNewBody("");
     setNewCategoryId("");
 
-    // Refresh threads by fetching from database
+    // Refresh threads by fetching from database (joined)
     setLoading(true);
+
     let query = supabase
       .from("forum_threads")
-      .select("*")
+      .select(`
+        *,
+        profiles(
+          full_name,
+          avatar_url
+        ),
+        forum_categories(
+          name
+        )
+      `)
       .order("created_at", { ascending: false });
 
     if (activeCategory !== "All") {
-      const category = categories.find(c => c.name === activeCategory);
-      if (category) {
-        query = query.eq("category_id", category.id);
-      }
+      const category = categories.find((c) => c.name === activeCategory);
+      if (category) query = query.eq("category_id", category.id);
     }
 
     const { data: refreshedThreads, error: fetchError } = await query;
 
-    if (fetchError) toast.error("Failed to load threads");
-    else setThreads(refreshedThreads || []);
+    if (fetchError) {
+      toast.error("Failed to load threads");
+      setThreads([]);
+      setLoading(false);
+      return;
+    }
+
+    const mappedThreads: Thread[] = ((refreshedThreads as any[] | null | undefined) ?? []).map(
+      (t: any) => {
+        const categoryName =
+          categories.find((c) => c.id === t?.category_id)?.name ?? undefined;
+
+        return {
+          id: String(t?.id),
+          title: String(t?.title),
+          body: String(t?.body ?? ""),
+          excerpt: t?.excerpt ?? t?.body?.slice?.(0, 180) ?? null,
+          category_id: String(t?.category_id),
+          user_id: String(t?.user_id ?? ""),
+          reply_count: (t?.reply_count ?? null) as number | null,
+          created_at: String(t?.created_at),
+          updated_at: t?.updated_at ?? undefined,
+          user_name: undefined, // loaded via joins on list view; keep safe here
+          avatar_url: null,
+          category_name: categoryName,
+        };
+      }
+    );
+
+    setThreads(mappedThreads as unknown as Thread[]);
     setLoading(false);
   };
 
@@ -202,8 +304,8 @@ const Forum = ({ openAuthModal }: { openAuthModal: () => void }) => {
     const { error } = await supabase.from("forum_replies").insert({
       thread_id: threadId,
       content: replyContent,
-      user_id: user.id,
-    });
+      author_id: user.id,
+    } as any);
 
     if (error) toast.error("Failed to post reply");
     else {
@@ -213,10 +315,23 @@ const Forum = ({ openAuthModal }: { openAuthModal: () => void }) => {
       // Refresh replies
       const { data } = await supabase
         .from("forum_replies")
-        .select("*")
+        .select(`
+          *,
+          profiles(
+            full_name,
+            avatar_url
+          )
+        `)
         .eq("thread_id", threadId)
         .order("created_at");
-      setReplies(data || []);
+
+      const mappedReplies: Reply[] = (data || []).map((r: any) => ({
+        ...r,
+        user_name: r.profiles?.full_name ?? undefined,
+        avatar_url: r.profiles?.avatar_url ?? null,
+      }));
+
+      setReplies(mappedReplies);
     }
   };
 
@@ -302,12 +417,21 @@ const Forum = ({ openAuthModal }: { openAuthModal: () => void }) => {
                       <Card className="p-6 hover:shadow-lg transition-all">
                         <h3 className="text-xl font-bold mb-2">{thread.title}</h3>
                         <p className="text-muted-foreground line-clamp-2 mb-3">
-                          {thread.body}
+                          {thread.excerpt || thread.body}
                         </p>
-                        <div className="flex items-center gap-4 text-sm text-muted-foreground">
-                <span>by {thread.user_id.slice(0, 8)}...</span>
+                        <div className="flex items-center gap-4 text-sm text-muted-foreground flex-wrap">
+                          <span>
+                            by{" "}
+                            {thread.user_name ??
+                              thread.user_id.slice(0, 8) + "..."}
+                          </span>
                           <span>{new Date(thread.created_at).toLocaleDateString()}</span>
-                          {category && <Badge variant="outline">{category.name}</Badge>}
+                          <Badge variant="outline">
+                            {thread.category_name ??
+                              category?.name ??
+                              "General"}
+                          </Badge>
+                          <span>{thread.reply_count ?? 0} replies</span>
                         </div>
                       </Card>
                     </Link>
@@ -336,7 +460,7 @@ const Forum = ({ openAuthModal }: { openAuthModal: () => void }) => {
                   onChange={(e) => setNewCategoryId(e.target.value)}
                   className="w-full p-2 border rounded"
                 >
-<option value="">Choose category</option>
+                  <option value="">Choose category</option>
                   {categories.map((c) => (
                     <option key={c.id} value={c.id}>
                       {c.name}
@@ -366,33 +490,55 @@ const Forum = ({ openAuthModal }: { openAuthModal: () => void }) => {
   }
 
   // Full Thread View
-  if (threadId && currentThread) {
-    const category = categories.find(c => c.id === currentThread.category_id);
+  if (threadId) {
+    if (loading) {
+      return (
+        <div className="container mx-auto px-4 py-8 max-w-4xl">
+          <div className="text-center py-20">
+            <Loader2 className="h-8 w-8 animate-spin mx-auto" />
+          </div>
+        </div>
+      );
+    }
+
+    if (!currentThread) {
+      return (
+        <div className="container mx-auto px-4 py-8 max-w-4xl">
+          <Button variant="ghost" onClick={() => navigate("/forum")} className="mb-6">
+            ← Back to Forum
+          </Button>
+          <Card className="p-6">
+            <p className="text-muted-foreground">Thread not found.</p>
+          </Card>
+        </div>
+      );
+    }
+
     return (
       <div className="container mx-auto px-4 py-8 max-w-4xl">
         <Button variant="ghost" onClick={() => navigate("/forum")} className="mb-6">
           ← Back to Forum
         </Button>
 
-        {loading ? (
-          <div className="text-center py-20">
-            <Loader2 className="h-8 w-8 animate-spin mx-auto" />
-          </div>
-        ) : (
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-2xl">{currentThread.title}</CardTitle>
-              <div className="flex items-center gap-4 text-sm text-muted-foreground">
-                <span>by {currentThread.user_id.slice(0, 8)}...</span>
-                <span>{new Date(currentThread.created_at).toLocaleString()}</span>
-                {category && <Badge variant="outline">{category.name}</Badge>}
-              </div>
-            </CardHeader>
-            <CardContent>
-              <p className="whitespace-pre-wrap text-foreground">{currentThread.body}</p>
-            </CardContent>
-          </Card>
-        )}
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-2xl">{currentThread.title}</CardTitle>
+            <div className="flex items-center gap-4 text-sm text-muted-foreground flex-wrap">
+              <span>
+                by{" "}
+                {currentThread.user_name ??
+                  currentThread.user_id.slice(0, 8) + "..."}
+              </span>
+              <span>{new Date(currentThread.created_at).toLocaleString()}</span>
+              <Badge variant="outline">
+                {currentThread.category_name ?? "General"}
+              </Badge>
+            </div>
+          </CardHeader>
+          <CardContent>
+            <p className="whitespace-pre-wrap text-foreground">{currentThread.body}</p>
+          </CardContent>
+        </Card>
 
         <div className="mt-8">
           <h3 className="text-xl font-bold mb-4">Replies ({replies.length})</h3>
@@ -428,7 +574,10 @@ const Forum = ({ openAuthModal }: { openAuthModal: () => void }) => {
               <Card key={reply.id}>
                 <CardContent className="pt-4">
                   <p className="text-sm text-muted-foreground mb-2">
-                    by {reply.author_id.slice(0, 8)}... • {new Date(reply.created_at).toLocaleString()}
+                    by{" "}
+                    {reply.user_name ??
+                      reply.author_id.slice(0, 8) + "..."}{" "}
+                    • {new Date(reply.created_at).toLocaleString()}
                   </p>
                   <p className="whitespace-pre-wrap">{reply.content}</p>
                   {user && (
@@ -468,7 +617,13 @@ const Forum = ({ openAuthModal }: { openAuthModal: () => void }) => {
     );
   }
 
-  return null;
+  return (
+    <div className="container mx-auto px-4 py-8">
+      <div className="text-center text-muted-foreground py-8">
+        Select a thread to view details.
+      </div>
+    </div>
+  );
 };
 
 export default Forum;
